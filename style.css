@@ -46,8 +46,9 @@ h1 {
 
 /* Invisible */
 .zero-cell {
-    background: transparent;
+    background: #e0e0e0;
 }
+
 
 /* Black */
 .black-cell {
