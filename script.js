@@ -26,38 +26,33 @@ function buildGrid() {
 
     grid.innerHTML = "";
 
-    puzzle.forEach((row, r) => {
+    for (let r = 0; r < 18; r++) {
 
-        row.split("").forEach((char, c) => {
+        for (let c = 0; c < 18; c++) {
 
-            const cellWrapper = document.createElement("div");
-            cellWrapper.className = "grid-cell";
+            const char = puzzle[r][c];
+
+            const wrapper = document.createElement("div");
+            wrapper.className = "grid-cell";
 
             if (char === "0") {
-                cellWrapper.classList.add("zero-cell");
+                wrapper.classList.add("zero-cell");
             }
-
             else if (char === "#") {
-                cellWrapper.classList.add("black-cell");
+                wrapper.classList.add("black-cell");
             }
-
             else {
                 const input = document.createElement("input");
-                input.maxLength = 1;
                 input.className = "cell";
+                input.maxLength = 1;
                 input.dataset.correct = char;
-
-                input.addEventListener("input", function () {
-                    this.value = this.value.toUpperCase();
-                });
-
-                cellWrapper.appendChild(input);
+                wrapper.appendChild(input);
             }
 
-            grid.appendChild(cellWrapper);
-        });
-    });
-    
+            grid.appendChild(wrapper);
+        }
+    }
+
     console.log("Total cells:", grid.children.length);
 }
 
