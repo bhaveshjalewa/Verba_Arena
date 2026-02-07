@@ -1,142 +1,184 @@
-body {
-    font-family: Arial, sans-serif;
-    background: #f4f6f9;
-    text-align: center;
-    margin: 0;
+/* ===== GENERAL ===== */
+
+body{
+    margin:0;
+    font-family:Segoe UI, sans-serif;
+    background:#f4f6f9;
+    text-align:center;
 }
 
-h1 {
-    margin: 20px 0;
+h1,h3{
+    margin:10px 0;
 }
 
-.container {
-    display: flex;
-    justify-content: center;
-    gap: 40px;
-    align-items: flex-start;
+button{
+    padding:8px 16px;
+    margin:5px;
+    font-weight:bold;
+    cursor:pointer;
 }
 
-/* GRID */
-#grid {
-    display: grid;
-    grid-template-columns: repeat(18, 35px);
-    grid-template-rows: repeat(18, 35px);
-    grid-auto-flow: row;
-    width: 630px;
-    height: 630px;
+/* ===== START SCREEN ===== */
+
+#startScreen{
+    position:fixed;
+    width:100%;
+    height:100%;
+    background:#f4f6f9;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
 }
 
-
-/* Every position is now same wrapper */
-.grid-cell {
-    width: 35px;
-    height: 35px;
-    box-sizing: border-box;
+.instructions{
+    width:420px;
+    text-align:left;
+    margin-bottom:20px;
 }
 
-/* Playable */
-.cell {
-    width: 100%;
-    height: 100%;
-    border: 1px solid black;
-    text-align: center;
-    font-size: 18px;
-    text-transform: uppercase;
-    padding: 0;
-    margin: 0;
+/* ===== GAME ===== */
+
+#gameContainer{
+    display:none;
+    padding-bottom:40px;
 }
 
-/* Invisible */
-.zero-cell {
-    background: transparent;
+header{
+    padding:10px;
+    font-weight:bold;
+    background:#dbe7f5;
 }
 
+/* ===== MAIN LAYOUT ===== */
 
-/* Black */
-.black-cell {
-    background: black;
+.main-layout{
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    gap:40px;
+    margin-top:20px;
 }
 
-/* Clues */
-.clues {
-    width: 400px;
-    height: 630px;
-    overflow-y: auto;
-    text-align: left;
+/* ===== GRID ===== */
+
+#grid{
+    display:grid;
+    grid-template-columns:repeat(18,35px);
+    grid-template-rows:repeat(18,35px);
 }
 
-/* Buttons */
-.controls {
-    margin-top: 20px;
+.grid-cell{
+    width:35px;
+    height:35px;
+    position:relative;
 }
 
-button {
-    padding: 8px 16px;
-    margin: 5px;
-    font-weight: bold;
-    cursor: pointer;
+.cell{
+    width:100%;
+    height:100%;
+    border:1px solid black;
+    text-align:center;
+    font-size:18px;
+    text-transform:uppercase;
+    padding:0;
+    box-sizing:border-box;
 }
 
-#message {
-    margin-top: 20px;
-    font-size: 18px;
-    font-weight: bold;
+.zero-cell{
+    background:#f4f6f9;
+    border:none;
 }
 
-.grid-cell {
-    position: relative;
-    width: 35px;
-    height: 35px;
-    box-sizing: border-box;
+.black-cell{
+    background:black;
 }
 
-.cell {
-    width: 100%;
-    height: 100%;
-    border: 1px solid black;
-    text-align: center;
-    font-size: 18px;
-    text-transform: uppercase;
-    padding: 0;
-    margin: 0;
+.cell-number{
+    position:absolute;
+    top:2px;
+    left:3px;
+    font-size:9px;
+    font-weight:bold;
+    pointer-events:none;
 }
 
-.cell-number {
-    position: absolute;
-    top: 2px;
-    left: 3px;
-    font-size: 10px;
-    font-weight: bold;
-    pointer-events: none;
+/* ===== CLUES ===== */
+
+.clues-wrapper{
+    display:flex;
+    gap:30px;
+    height:630px;
 }
 
-.clue-item {
-    padding: 4px;
-    cursor: pointer;
+.clue-column{
+    width:320px;
+    overflow-y:auto;
+    text-align:left;
+    background:white;
+    padding:10px;
+    border-radius:6px;
 }
 
-.clue-item:hover {
-    background: #eee;
+.clue-item{
+    padding:4px;
+    font-size:14px;
+    cursor:pointer;
+    border-radius:4px;
 }
 
-#startScreen {
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    background: #f4f6f9;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+.clue-item:hover{
+    background:#eeeeee;
 }
 
-.instructions {
-    width: 400px;
-    text-align: left;
-    margin-bottom: 20px;
+/* highlight active clue */
+.clue-item.active{
+    background:#d0e8ff;
 }
 
-header {
-    font-weight: bold;
-    padding: 10px;
+/* ===== CONTROLS ===== */
+
+.controls{
+    margin-top:20px;
+}
+
+#message{
+    margin-top:20px;
+    font-weight:bold;
+}
+
+/* ===== MOBILE RESPONSIVE ===== */
+
+@media (max-width:1000px){
+
+    .main-layout{
+        flex-direction:column;
+        align-items:center;
+    }
+
+    .clues-wrapper{
+        flex-direction:column;
+        height:auto;
+    }
+
+    .clue-column{
+        width:90%;
+        max-height:300px;
+    }
+
+    #grid{
+        transform:scale(0.85);
+        transform-origin:top center;
+    }
+}
+
+@media (max-width:600px){
+
+    #grid{
+        transform:scale(0.7);
+    }
+
+    .instructions{
+        width:90%;
+    }
 }
