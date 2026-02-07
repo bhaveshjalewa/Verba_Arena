@@ -3,64 +3,358 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Verba Arena</title>
-<link rel="stylesheet" href="style.css">
+<title>Global Money Week Crossword</title>
+
+<style>
+
+/* ---------- GENERAL ---------- */
+
+body{
+    margin:0;
+    font-family:Segoe UI, sans-serif;
+    background:#f4f6f9;
+    text-align:center;
+}
+
+h1,h3{ margin:10px 0; }
+
+/* ---------- START SCREEN ---------- */
+
+#startScreen{
+    position:fixed;
+    width:100%;
+    height:100%;
+    background:#f4f6f9;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+}
+
+.instructions{
+    width:420px;
+    text-align:left;
+    margin-bottom:20px;
+}
+
+/* ---------- GAME LAYOUT ---------- */
+
+#gameContainer{
+    display:none;
+    padding-bottom:40px;
+}
+
+header{
+    padding:10px;
+    font-weight:bold;
+}
+
+/* GRID + CLUES SIDE BY SIDE */
+
+.main-layout{
+    display:flex;
+    justify-content:center;
+    gap:40px;
+    margin-top:20px;
+    align-items:flex-start;
+}
+
+/* ---------- GRID ---------- */
+
+#grid{
+    display:grid;
+    grid-template-columns:repeat(18,35px);
+    grid-template-rows:repeat(18,35px);
+}
+
+.grid-cell{
+    width:35px;
+    height:35px;
+    position:relative;
+}
+
+.cell{
+    width:100%;
+    height:100%;
+    border:1px solid black;
+    text-align:center;
+    font-size:18px;
+    text-transform:uppercase;
+    padding:0;
+}
+
+/* camouflaged 0 cells */
+.zero-cell{
+    background:#f4f6f9;
+    border:none;
+}
+
+/* black cell */
+.black-cell{
+    background:black;
+}
+
+/* numbering */
+.cell-number{
+    position:absolute;
+    top:2px;
+    left:3px;
+    font-size:9px;
+    font-weight:bold;
+}
+
+/* ---------- CLUES ---------- */
+
+.clues-wrapper{
+    display:flex;
+    gap:30px;
+    height:630px;
+}
+
+.clue-column{
+    width:320px;
+    overflow-y:auto;
+    text-align:left;
+}
+
+.clue-item{
+    padding:4px;
+    font-size:14px;
+    cursor:pointer;
+}
+
+.clue-item:hover{
+    background:#eeeeee;
+}
+
+/* ---------- CONTROLS ---------- */
+
+.controls{
+    margin-top:20px;
+}
+
+button{
+    padding:8px 15px;
+    margin:5px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+#message{
+    margin-top:20px;
+    font-weight:bold;
+}
+
+</style>
 </head>
 <body>
 
 <!-- START SCREEN -->
+
 <div id="startScreen">
-    <h1>Verba Arena</h1>
+    <h1>Global Money Week Crossword</h1>
 
     <div class="instructions">
         <p><b>Instructions:</b></p>
         <ul>
             <li>Fill the crossword using finance concepts.</li>
-            <li>Click a cell to activate a word.</li>
+            <li>Click cell to activate word.</li>
             <li>Click again to toggle Across/Down.</li>
             <li>Typing moves forward automatically.</li>
-            <li>Press Enter to move forward.</li>
-            <li>Use Undo if needed.</li>
+            <li>Use Undo or Clear if needed.</li>
             <li>Submit when completed.</li>
-            <li>Completion code appears after full correctness.</li>
         </ul>
     </div>
 
     <button id="startBtn">START QUIZ</button>
 </div>
 
-<!-- GAME CONTAINER -->
-<div id="gameContainer" style="display:none;">
+<!-- GAME -->
 
-    <header>
-        <div>Time: <span id="timer">00:00</span></div>
-    </header>
+<div id="gameContainer">
 
-<div class="clues-wrapper">
+<header>
+    Time: <span id="timer">00:00</span>
+</header>
 
-    <div class="clue-column">
-        <h3>Across</h3>
-        <div id="acrossClues"></div>
-    </div>
+<div class="main-layout">
 
-    <div class="clue-column">
-        <h3>Down</h3>
-        <div id="downClues"></div>
+    <div id="grid"></div>
+
+    <div class="clues-wrapper">
+        <div class="clue-column">
+            <h3>Across</h3>
+            <div id="acrossClues"></div>
+        </div>
+
+        <div class="clue-column">
+            <h3>Down</h3>
+            <div id="downClues"></div>
+        </div>
     </div>
 
 </div>
 
+<div class="controls">
+    <button id="undoBtn">Undo</button>
+    <button id="clearBtn">Clear</button>
+    <button id="submitBtn">Submit</button>
+</div>
 
-    <div class="controls">
-        <button id="undoBtn">Undo</button>
-        <button id="clearBtn">Clear</button>
-        <button id="submitBtn">Submit</button>
-    </div>
-
-    <div id="message"></div>
+<div id="message"></div>
 
 </div>
 
-<script src="script.js"></script>
+<script>
+
+/* ---------- START + TIMER ---------- */
+
+let timerInterval;
+let startTime;
+
+const startBtn=document.getElementById("startBtn");
+const startScreen=document.getElementById("startScreen");
+const gameContainer=document.getElementById("gameContainer");
+const timerDisplay=document.getElementById("timer");
+const message=document.getElementById("message");
+
+startBtn.onclick=function(){
+    startScreen.style.display="none";
+    gameContainer.style.display="block";
+    startTime=Date.now();
+    timerInterval=setInterval(updateTimer,1000);
+    buildGrid();
+};
+
+function updateTimer(){
+    const diff=Math.floor((Date.now()-startTime)/1000);
+    const m=Math.floor(diff/60);
+    const s=diff%60;
+    timerDisplay.textContent=
+        (m<10?"0"+m:m)+":"+(s<10?"0"+s:s);
+}
+
+/* ---------- PUZZLE DATA ---------- */
+
+const puzzle=[
+"LEVERAGE0000D00B00",
+"I000E0R0Y0PREMIUM0",
+"Q0NAV0O0I000B00D00",
+"U000E0W0EQUITY0G0",
+"I000N0T0L00000BETA",
+"D000U0HEDGING00T0P",
+"0W00E00000N000000I",
+"0E00000000F0PROFIT",
+"MARGIN0C00L000000A",
+"0L00000R0SAVINGS0L",
+"0TAXABLE00T0000000",
+"0H00000D0TENURE000",
+"0000000I00000E0000",
+"0DEFAULT0DURATION0",
+"0000L0000E0I#U0000",
+"0COUPON00B0SPREAD0",
+"0000H0000T0K0N0000",
+"0000ASSETS00000000"
+];
+
+const COMPLETION_CODE=
+"X9F7LQ2ZP8M4R1T6V3W0K5Y8C2D7N4B1S6H9E0J3G2U5A";
+
+/* ---------- GRID ---------- */
+
+const grid=document.getElementById("grid");
+let words=[];
+let activeWord=null;
+let currentDirection="across";
+let historyStack=[];
+
+function buildGrid(){
+
+    grid.innerHTML="";
+    words=[];
+    let number=1;
+
+    for(let r=0;r<18;r++){
+        for(let c=0;c<18;c++){
+
+            const char=puzzle[r][c];
+            const wrapper=document.createElement("div");
+            wrapper.className="grid-cell";
+
+            if(char==="0"){
+                wrapper.classList.add("zero-cell");
+            }
+            else if(char==="#"){
+                wrapper.classList.add("black-cell");
+            }
+            else{
+
+                const startAcross=
+                    (c===0||puzzle[r][c-1]==="0"||puzzle[r][c-1]==="#") &&
+                    (c<17&&puzzle[r][c+1]!=="0"&&puzzle[r][c+1]!=="#");
+
+                const startDown=
+                    (r===0||puzzle[r-1][c]==="0"||puzzle[r-1][c]==="#") &&
+                    (r<17&&puzzle[r+1][c]!=="0"&&puzzle[r+1][c]!=="#");
+
+                if(startAcross||startDown){
+                    const num=document.createElement("div");
+                    num.className="cell-number";
+                    num.textContent=number++;
+                    wrapper.appendChild(num);
+                }
+
+                const input=document.createElement("input");
+                input.className="cell";
+                input.maxLength=1;
+                input.dataset.correct=char;
+
+                input.addEventListener("input",function(){
+                    this.value=this.value.toUpperCase();
+                });
+
+                wrapper.appendChild(input);
+            }
+
+            grid.appendChild(wrapper);
+        }
+    }
+}
+
+/* ---------- CLEAR ---------- */
+
+document.getElementById("clearBtn").onclick=function(){
+    document.querySelectorAll(".cell")
+        .forEach(c=>c.value="");
+    message.textContent="";
+};
+
+/* ---------- SUBMIT ---------- */
+
+document.getElementById("submitBtn").onclick=function(){
+
+    let correct=true;
+
+    document.querySelectorAll(".cell")
+        .forEach(input=>{
+            if(input.value!==input.dataset.correct)
+                correct=false;
+        });
+
+    if(correct){
+        clearInterval(timerInterval);
+        message.style.color="green";
+        message.innerHTML=
+        "Completed Successfully!<br><br>"+
+        "Completion Code:<br><br>"+COMPLETION_CODE;
+    }
+    else{
+        message.style.color="red";
+        message.textContent="Some answers are incorrect.";
+    }
+};
+
+</script>
+
 </body>
 </html>
