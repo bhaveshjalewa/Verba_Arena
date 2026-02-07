@@ -1,5 +1,5 @@
 /*************************
- START SCREEN + TIMER
+ START + TIMER
 *************************/
 
 let timerInterval;
@@ -12,24 +12,20 @@ const timerDisplay = document.getElementById("timer");
 const message = document.getElementById("message");
 
 startBtn.addEventListener("click", function () {
-
     startScreen.style.display = "none";
     gameContainer.style.display = "block";
-
     startTime = Date.now();
     timerInterval = setInterval(updateTimer, 1000);
-
     buildGrid();
 });
 
 function updateTimer() {
     const diff = Math.floor((Date.now() - startTime) / 1000);
-    const minutes = Math.floor(diff / 60);
-    const seconds = diff % 60;
-
+    const m = Math.floor(diff / 60);
+    const s = diff % 60;
     timerDisplay.textContent =
-        (minutes < 10 ? "0" + minutes : minutes) + ":" +
-        (seconds < 10 ? "0" + seconds : seconds);
+        (m < 10 ? "0" + m : m) + ":" +
+        (s < 10 ? "0" + s : s);
 }
 
 
@@ -58,26 +54,69 @@ const puzzle = [
 "0000ASSETS00000000"
 ];
 
+const acrossCluesText = [
+"Strategic use of borrowed capital to amplify returns.",
+"Additional return demanded for bearing uncertainty.",
+"Per-unit valuation metric of an investment fund.",
+"Residual ownership interest after liabilities.",
+"Sensitivity measure of security to market movement.",
+"Offsetting position taken to reduce risk.",
+"Surplus after deducting expenses from revenue.",
+"Broker-provided borrowing to increase exposure.",
+"Income deliberately set aside.",
+"Income subject to government levy.",
+"Agreed duration of financial contract.",
+"Failure to meet debt obligation.",
+"Bond price sensitivity measure.",
+"Periodic bond interest payment.",
+"Yield difference reflecting risk.",
+"Resources expected to generate value."
+];
+
+const downCluesText = [
+"Easily convertible into cash.",
+"Total income before expenses.",
+"Increase beyond inflation.",
+"Borrowed funds requiring repayment.",
+"Structured financial plan.",
+"Income percentage return.",
+"Financial resources for growth.",
+"Rise in general price level.",
+"Accumulated financial value.",
+"Ability to repay borrowed money.",
+"Total gain or loss on investment.",
+"Excess return beyond benchmark.",
+"Outstanding financial obligations.",
+"Uncertainty in financial outcomes."
+];
+
 const COMPLETION_CODE =
 "X9F7LQ2ZP8M4R1T6V3W0K5Y8C2D7N4B1S6H9E0J3G2U5A";
 
 
 /*************************
- GRID + GAME LOGIC
+ GRID + WORD ENGINE
 *************************/
 
 const grid = document.getElementById("grid");
+const acrossDiv = document.getElementById("acrossClues");
+const downDiv = document.getElementById("downClues");
+
 let words = [];
 let activeWord = null;
 let currentDirection = "across";
 let historyStack = [];
 
-
 function buildGrid() {
 
     grid.innerHTML = "";
     words = [];
+    acrossDiv.innerHTML = "";
+    downDiv.innerHTML = "";
+
     let number = 1;
+    let acrossIndex = 0;
+    let downIndex = 0;
 
     for (let r = 0; r < 18; r++) {
         for (let c = 0; c < 18; c++) {
@@ -104,19 +143,36 @@ function buildGrid() {
                     (r === 0 || puzzle[r - 1][c] === "0" || puzzle[r - 1][c] === "#") &&
                     (r < 17 && puzzle[r + 1][c] !== "0" && puzzle[r + 1][c] !== "#");
 
-                if (startAcross) {
-                    words.push({ number, direction: "across", cells: collectWord(r, c, "across") });
-                }
-
-                if (startDown) {
-                    words.push({ number, direction: "down", cells: collectWord(r, c, "down") });
-                }
-
                 if (startAcross || startDown) {
+
                     const num = document.createElement("div");
                     num.className = "cell-number";
-                    num.textContent = number++;
+                    num.textContent = number;
                     wrapper.appendChild(num);
+
+                    if (startAcross) {
+                        const word = {
+                            number,
+                            direction: "across",
+                            cells: collectWord(r, c, "across"),
+                            clue: acrossCluesText[acrossIndex++]
+                        };
+                        words.push(word);
+                        renderClue(word, acrossDiv);
+                    }
+
+                    if (startDown) {
+                        const word = {
+                            number,
+                            direction: "down",
+                            cells: collectWord(r, c, "down"),
+                            clue: downCluesText[downIndex++]
+                        };
+                        words.push(word);
+                        renderClue(word, downDiv);
+                    }
+
+                    number++;
                 }
 
                 const input = document.createElement("input");
@@ -127,18 +183,6 @@ function buildGrid() {
                 input.dataset.correct = char;
 
                 input.addEventListener("focus", () => activateCell(r, c));
-
-                input.addEventListener("keydown", function (e) {
-                    if (e.key.length === 1 && /^[A-Za-z]$/.test(e.key)) {
-                        historyStack.push({
-                            row: r,
-                            col: c,
-                            prev: input.value
-                        });
-                    }
-                    handleKey(e);
-                });
-
                 input.addEventListener("input", autoMove);
 
                 wrapper.appendChild(input);
@@ -149,34 +193,33 @@ function buildGrid() {
     }
 }
 
-
-/*************************
- WORD COLLECTION
-*************************/
-
 function collectWord(r, c, dir) {
     const cells = [];
-
     while (r < 18 && c < 18 &&
         puzzle[r][c] !== "0" &&
         puzzle[r][c] !== "#") {
-
         cells.push({ r, c });
-
         if (dir === "across") c++;
         else r++;
     }
-
     return cells;
+}
+
+function renderClue(word, container) {
+    const div = document.createElement("div");
+    div.className = "clue-item";
+    div.textContent = word.number + ". " + word.clue;
+    div.onclick = () => highlightWord(word);
+    word.clueElement = div;
+    container.appendChild(div);
 }
 
 
 /*************************
- ACTIVATION + HIGHLIGHT
+ HIGHLIGHT
 *************************/
 
 function activateCell(r, c) {
-
     const matchingWords = words.filter(w =>
         w.cells.some(cell => cell.r === r && cell.c === c)
     );
@@ -190,20 +233,26 @@ function activateCell(r, c) {
         matchingWords.find(w => w.direction === currentDirection)
         || matchingWords[0];
 
-    highlightWord();
+    highlightWord(activeWord);
 }
 
-function highlightWord() {
-
+function highlightWord(word) {
     document.querySelectorAll(".cell")
         .forEach(c => c.style.background = "white");
+    document.querySelectorAll(".clue-item")
+        .forEach(c => c.style.background = "transparent");
 
-    if (!activeWord) return;
+    if (!word) return;
 
-    activeWord.cells.forEach(cell => {
+    word.cells.forEach(cell => {
         const el = getCell(cell.r, cell.c);
         if (el) el.style.background = "#d0e8ff";
     });
+
+    if (word.clueElement)
+        word.clueElement.style.background = "#d0e8ff";
+
+    activeWord = word;
 }
 
 function getCell(r, c) {
@@ -214,13 +263,11 @@ function getCell(r, c) {
 
 
 /*************************
- NAVIGATION
+ AUTO MOVE
 *************************/
 
 function autoMove(e) {
-
     e.target.value = e.target.value.toUpperCase();
-
     if (!activeWord) return;
 
     const index = activeWord.cells.findIndex(cell =>
@@ -231,33 +278,6 @@ function autoMove(e) {
     if (index < activeWord.cells.length - 1) {
         const next = activeWord.cells[index + 1];
         getCell(next.r, next.c).focus();
-    }
-}
-
-function handleKey(e) {
-
-    if (!activeWord) return;
-
-    const r = parseInt(e.target.dataset.row);
-    const c = parseInt(e.target.dataset.col);
-
-    const index = activeWord.cells.findIndex(cell =>
-        cell.r === r && cell.c === c
-    );
-
-    if (e.key === "Enter") {
-        e.preventDefault();
-        if (index < activeWord.cells.length - 1) {
-            const next = activeWord.cells[index + 1];
-            getCell(next.r, next.c).focus();
-        }
-    }
-
-    if (e.key === "Backspace" && e.target.value === "") {
-        if (index > 0) {
-            const prev = activeWord.cells[index - 1];
-            getCell(prev.r, prev.c).focus();
-        }
     }
 }
 
@@ -281,6 +301,20 @@ document.getElementById("undoBtn")
 
 
 /*************************
+ CLEAR
+*************************/
+
+document.getElementById("clearBtn")
+    .addEventListener("click", function () {
+
+        document.querySelectorAll(".cell")
+            .forEach(cell => cell.value = "");
+
+        message.textContent = "";
+    });
+
+
+/*************************
  SUBMIT
 *************************/
 
@@ -297,20 +331,18 @@ document.getElementById("submitBtn")
             });
 
         if (correct) {
-
             clearInterval(timerInterval);
-
             message.style.color = "green";
             message.innerHTML =
-                "<b>Crossword Completed Successfully!</b><br><br>" +
+                "<b>Completed Successfully!</b><br><br>" +
                 "Completion Code:<br><br>" +
-                "<div style='font-size:16px;word-break:break-all'>" +
+                "<div style='word-break:break-all'>" +
                 COMPLETION_CODE +
                 "</div>";
         }
         else {
             message.style.color = "red";
             message.textContent =
-                "Some answers are incorrect. Please review.";
+                "Some answers are incorrect.";
         }
     });
