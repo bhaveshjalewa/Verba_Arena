@@ -100,6 +100,61 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /*************************
  START + TIMER
 *************************/
@@ -125,6 +180,7 @@ function updateTimer() {
     const diff = Math.floor((Date.now() - startTime) / 1000);
     const m = Math.floor(diff / 60);
     const s = diff % 60;
+
     timerDisplay.textContent =
         (m < 10 ? "0" + m : m) + ":" +
         (s < 10 ? "0" + s : s);
@@ -296,6 +352,7 @@ function buildGrid() {
 
                 input.addEventListener("focus", () => activateCell(r, c));
                 input.addEventListener("input", autoMove);
+                input.addEventListener("keydown", handleKey);
 
                 wrapper.appendChild(input);
             }
@@ -306,7 +363,9 @@ function buildGrid() {
 }
 
 function collectWord(r, c, dir) {
+
     const cells = [];
+
     while (
         r < 18 &&
         c < 18 &&
@@ -314,17 +373,22 @@ function collectWord(r, c, dir) {
         puzzle[r][c] !== "#"
     ) {
         cells.push({ r, c });
+
         if (dir === "across") c++;
         else r++;
     }
+
     return cells;
 }
 
 function renderClue(word, container) {
+
     const div = document.createElement("div");
     div.className = "clue-item";
     div.textContent = word.number + ". " + word.clue;
+
     div.onclick = () => highlightWord(word);
+
     word.clueElement = div;
     container.appendChild(div);
 }
@@ -373,13 +437,64 @@ function highlightWord(word) {
 }
 
 function getCell(r, c) {
+
     return document.querySelector(
         `.cell[data-row='${r}'][data-col='${c}']`
     );
 }
 
+/*************************
+ AUTO MOVE
+*************************/
+
 function autoMove(e) {
-    e.target.value = e.target.value.toUpperCase();
+
+    const input = e.target;
+
+    input.value = input.value.toUpperCase();
+
+    if (!activeWord) return;
+
+    const r = parseInt(input.dataset.row);
+    const c = parseInt(input.dataset.col);
+
+    const index = activeWord.cells.findIndex(
+        cell => cell.r === r && cell.c === c
+    );
+
+    const next = activeWord.cells[index + 1];
+
+    if (next) {
+        const nextCell = getCell(next.r, next.c);
+        if (nextCell) nextCell.focus();
+    }
+}
+
+/*************************
+ BACKSPACE MOVE
+*************************/
+
+function handleKey(e) {
+
+    if (e.key !== "Backspace") return;
+
+    const input = e.target;
+
+    if (input.value !== "") return;
+
+    const r = parseInt(input.dataset.row);
+    const c = parseInt(input.dataset.col);
+
+    const index = activeWord.cells.findIndex(
+        cell => cell.r === r && cell.c === c
+    );
+
+    const prev = activeWord.cells[index - 1];
+
+    if (prev) {
+        const prevCell = getCell(prev.r, prev.c);
+        if (prevCell) prevCell.focus();
+    }
 }
 
 /*************************
@@ -388,8 +503,10 @@ function autoMove(e) {
 
 document.getElementById("clearBtn")
 .addEventListener("click", function () {
+
     document.querySelectorAll(".cell")
         .forEach(cell => cell.value = "");
+
     message.textContent = "";
 });
 
@@ -404,9 +521,11 @@ document.getElementById("submitBtn")
 
     document.querySelectorAll(".cell")
         .forEach(input => {
+
             if (input.value !== input.dataset.correct) {
                 correct = false;
             }
+
         });
 
     if (correct) {
@@ -414,6 +533,7 @@ document.getElementById("submitBtn")
         clearInterval(timerInterval);
 
         message.style.color = "green";
+
         message.innerHTML =
             "<b>Completed Successfully!</b><br><br>" +
             "Completion Code:<br><br>" +
@@ -426,6 +546,7 @@ document.getElementById("submitBtn")
     } else {
 
         message.style.color = "red";
+
         message.textContent =
             "Some answers are incorrect.";
     }
@@ -443,7 +564,6 @@ function lockPuzzle() {
             cell.style.background = "#e6f4ea";
         });
 
-    document.getElementById("undoBtn").disabled = true;
     document.getElementById("clearBtn").disabled = true;
     document.getElementById("submitBtn").disabled = true;
 }
